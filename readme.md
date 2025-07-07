@@ -1,77 +1,95 @@
-CREATE TABLE users (
-    id BIGINT PRIMARY KEY AUTO_INCREMENT,
-    username VARCHAR(50) UNIQUE NOT NULL,
-    email VARCHAR(100) UNIQUE NOT NULL,
-    password VARCHAR(255) NOT NULL,
-    role ENUM('USER', 'ADMIN') DEFAULT 'USER',
-    profile_picture VARCHAR(255),
-    bio('ADMIN') VARCHAR(255),
-    is_verified BOOLEAN DEFAULT FALSE, -- optional email verification
-    github_username VARCHAR(100), -- optional if user shares repo
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
-);
+// ==========================
+// USERS COLLECTION
+// ==========================
+{
+  "_id": ObjectId(),
+  "username": "pratyush",
+  "email": "pratyush@example.com",
+  "password": "hashed_password",
+  "role": "USER", // USER or ADMIN
+  "profile_picture": "profile.jpg",
+  "bio": "Developer | Admin bio here",
+  "is_verified": false,
+  "github_username": "pratyush-github",
+  "account_type": "VENDOR", // VENDOR or BUYER
+  "created_at": ISODate(),
+  "updated_at": ISODate()
+}
 
-CREATE TABLE refresh_tokens (
-    id BIGINT PRIMARY KEY AUTO_INCREMENT,
-    user_id BIGINT NOT NULL,
-    token VARCHAR(500) NOT NULL,
-    expiry_date TIMESTAMP NOT NULL,
-    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
-);
+// ==========================
+// TOKENS COLLECTION
+// ==========================
+{
+  "_id": ObjectId(),
+  "user_id": ObjectId(), // Reference to users
+  "refresh_token": "some_random_refresh_token", // stored in DB and cookies
+  "user_agent": "browser info", // optional, for security
+  "ip_address": "optional", // for security tracking
+  "is_valid": true,
+  "created_at": ISODate(),
+  "expires_at": ISODate()
+}
 
-CREATE TABLE products (
-    id BIGINT PRIMARY KEY AUTO_INCREMENT,
-    user_id BIGINT NOT NULL, 
-    title VARCHAR(150) NOT NULL,
-    description TEXT NOT NULL,
-    product_type ENUM('UI_COMPONENT', 'FULL_PROJECT') NOT NULL,
-    delivery_type ENUM('ZIP', 'GITHUB_LINK') NOT NULL,
-    delivery_link VARCHAR(255) NOT NULL,
-    price DECIMAL(10,2) NOT NULL,
-    language VARCHAR(50) NOT NULL,
-    framework VARCHAR(50) NOT NULL,
-    tags VARCHAR(255), -- CSV or separate tags table
-    demo_link VARCHAR(255),
-    code_quality ENUM('Top notch','EXCELLENT', 'GOOD', 'AVERAGE', 'POOR') DEFAULT 'GOOD',
-    is_responsive BOOLEAN DEFAULT TRUE,
-    platform ENUM('MOBILE', 'DESKTOP', 'BOTH') NOT NULL,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-);
+// ==========================
+// PRODUCTS COLLECTION
+// ==========================
+{
+  "_id": ObjectId(),
+  "user_id": ObjectId(), // Vendor who uploaded
+  "title": "Beautiful Login UI",
+  "description": "Responsive Flutter Login UI",
+  "product_type": "UI_COMPONENT", // or FULL_PROJECT
+  "price": 20.00,
+  "discounted_price": 15.00, // Optional, can be null
+  "language": "Dart",
+  "framework": "Flutter",
+  "tags": ["UI", "Login", "Mobile"], // Array of tags
+  "images": ["image1.jpg", "image2.jpg"], // Array of image URLs
+  "demo_link": "https://demo.example.com", // Optional
+  "code_quality": "GOOD", // AI evaluated
+  "is_responsive": true,
+  "platform": "MOBILE", // DESKTOP or BOTH
+  "zip_file_path": "uploads/abc.zip", // Mandatory ZIP upload
+  "created_at": ISODate(),
+  "updated_at": ISODate()
+}
 
-CREATE TABLE favorites (
-    user_id BIGINT NOT NULL,
-    product_id BIGINT NOT NULL,
-    PRIMARY KEY (user_id, product_id),
-    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
-    FOREIGN KEY (product_id) REFERENCES products(id) ON DELETE CASCADE
+// ==========================
+// FAVORITES COLLECTION
+// ==========================
+{
+  "_id": ObjectId(),
+  "user_id": ObjectId(),
+  "product_id": ObjectId(),
+  "created_at": ISODate()
+}
 
-);
+// ==========================
+// REVIEWS COLLECTION
+// ==========================
+{
+  "_id": ObjectId(),
+  "product_id": ObjectId(),
+  "user_id": ObjectId(),
+  "rating": 4, // Range: 1-5
+  "comment": "Great code quality and easy to integrate!",
+  "created_at": ISODate()
+}
 
-CREATE TABLE reviews (
-    id BIGINT PRIMARY KEY AUTO_INCREMENT,
-    product_id BIGINT NOT NULL,
-    user_id BIGINT NOT NULL,
-    rating INT CHECK (rating >= 1 AND rating <= 5),
-    comment TEXT,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (product_id) REFERENCES products(id) ON DELETE CASCADE,
-    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
-);
-
-CREATE TABLE orders (
-    id BIGINT PRIMARY KEY AUTO_INCREMENT,
-    user_id BIGINT NOT NULL,
-    product_id BIGINT NOT NULL,
-    price DECIMAL(10,2) NOT NULL, -- total price paid by user
-    platform_fee DECIMAL(10,2) NOT NULL, -- fee charged by platform
-    seller_earning DECIMAL(10,2) NOT NULL, -- price - platform_fee
-    payment_status ENUM('PENDING', 'PAID', 'FAILED') DEFAULT 'PAID',
-    delivery_type ENUM('ZIP', 'GITHUB_LINK') NOT NULL,
-    delivery_link VARCHAR(255) NOT NULL,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
-    FOREIGN KEY (product_id) REFERENCES products(id) ON DELETE CASCADE
-);
-
+// ==========================
+// ORDERS COLLECTION
+// ==========================
+{
+  "_id": ObjectId(),
+  "buyer_id": ObjectId(), // Who bought
+  "product_id": ObjectId(),
+  "vendor_id": ObjectId(), // Seller
+  "price": 20.00,
+  "discounted_price": 15.00, // Price buyer paid
+  "platform_fee": 2.00,
+  "seller_earning": 13.00,
+  "payment_status": "PAID", // PENDING, PAID, FAILED
+  "delivery_type": "ZIP", // Always ZIP
+  "zip_file_path": "uploads/abc.zip",
+  "created_at": ISODate()
+}
