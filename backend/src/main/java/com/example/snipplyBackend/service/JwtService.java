@@ -10,7 +10,7 @@ import java.util.Date;
 @Service
 public class JwtService {
 
-    private static final String SECRET_KEY = "6t9BceJGxfq0HjRvMHEZThJ+xVubnxsaeQZdBrCR/og=\n";
+    private static final String SECRET_KEY = Env.get("JWT_SECRET_KEY");
 
     private Key getSignKey() {
         return Keys.hmacShaKeyFor(SECRET_KEY.getBytes());
