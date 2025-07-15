@@ -26,7 +26,7 @@ public class AuthController {
     }
 
     @PostMapping("/login")
-    public ResponseEntity<?> login(@RequestBody LoginRequest req) {
+    public ResponseEntity<?> login(@RequestBody LoginRequest req) { //When the client sends a POST request to /api/auth/login with JSON data in the body, take that JSON and convert it into a Java object of type LoginRequest DTO
         try {
             return ResponseEntity.ok(userService.login(req));
         } catch (RuntimeException e) {
@@ -36,6 +36,10 @@ public class AuthController {
 
     @GetMapping("/all")
     public ResponseEntity<?> getAll() {
-        return ResponseEntity.ok("Should move to an admin service/controller");
+        try {
+            return ResponseEntity.ok(userService.getAllUsers());
+        } catch (Exception e) {
+            return ResponseEntity.status(500).body("Something went wrong: " + e.getMessage());
+        }
     }
 }

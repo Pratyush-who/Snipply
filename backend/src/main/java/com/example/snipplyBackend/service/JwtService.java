@@ -21,7 +21,7 @@ public class JwtService {
                 .setSubject(userEmail)
                 .setIssuedAt(new Date(System.currentTimeMillis()))
                 .setExpiration(new Date(System.currentTimeMillis() + 1000 * 60 * 60 * 10)) // 10 hours
-                .signWith(getSignKey(), SignatureAlgorithm.HS256)
+                .signWith(getSignKey(), SignatureAlgorithm.HS256) // Sign using secret key and HS256 algo
                 .compact();
     }
 
@@ -48,4 +48,14 @@ public class JwtService {
                 .getExpiration()
                 .before(new Date());
     }
+
+    public String extractUserEmail(String token) {
+        return Jwts.parserBuilder()
+                .setSigningKey(getSignKey())
+                .build()
+                .parseClaimsJws(token)
+                .getBody()
+                .getSubject();
+    }
+
 }

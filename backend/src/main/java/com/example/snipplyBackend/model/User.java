@@ -9,7 +9,7 @@ import org.springframework.data.mongodb.core.mapping.Document;
 
 import java.util.Date;
 
-@Document(collection = "users")
+@Document(collection = "users") // maps to mongo
 @Data
 @NoArgsConstructor
 @AllArgsConstructor

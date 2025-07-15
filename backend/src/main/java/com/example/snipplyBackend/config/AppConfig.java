@@ -13,3 +13,4 @@ public class AppConfig {
         return new BCryptPasswordEncoder();
     }
 }
+//This tells Spring how to encrypt passwords using BCrypt

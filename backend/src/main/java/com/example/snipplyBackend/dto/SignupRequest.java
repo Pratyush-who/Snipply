@@ -19,4 +19,9 @@ public class SignupRequest {
 
     @NotBlank(message = "Role is required")
     private String role;
+
+    // Optional fields — no @NotBlank
+    private String profilePicture;
+    private String bio;
+    private String githubUsername;
 }
