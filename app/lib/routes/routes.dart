@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:snipply/main/auth/loginpage.dart';
 import 'package:snipply/main/auth/sign_up.dart';
 import 'package:snipply/main/screens/splash/splashscreen.dart';

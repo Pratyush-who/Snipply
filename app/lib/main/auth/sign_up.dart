@@ -1,7 +1,7 @@
-import 'dart:convert';
+// lib/main/auth/sign_up.dart
 import 'package:flutter/material.dart';
-import 'package:http/http.dart' as http;
 import 'package:snipply/routes/routes.dart';
+import 'package:snipply/service/auth_services.dart';
 
 class SignupPage extends StatefulWidget {
   const SignupPage({super.key});
@@ -11,64 +11,120 @@ class SignupPage extends StatefulWidget {
 }
 
 class _SignupPageState extends State<SignupPage> {
-  final _email = TextEditingController();
-  final _password = TextEditingController();
-  bool _loading = false;
+  final _formKey = GlobalKey<FormState>();
+  final _emailController = TextEditingController();
+  final _passwordController = TextEditingController();
+  final _usernameController = TextEditingController();
+  final _roleController = TextEditingController();
+  bool _isLoading = false;
+  final AuthService _authService = AuthService();
 
-  Future<void> _signup() async {
-    setState(() => _loading = true);
+  Future<void> _handleSignup() async {
+    if (!_formKey.currentState!.validate()) return;
 
-    final url = Uri.parse('http://localhost:8080/api/auth/signup');
-    final res = await http.post(
-      url,
-      headers: {'Content-Type': 'application/json'},
-      body: jsonEncode({
-        'email': _email.text.trim(),
-        'password': _password.text.trim(),
-      }),
-    );
-
-    setState(() => _loading = false);
-
-    if (res.statusCode == 200 && mounted) {
-      Navigator.pushReplacementNamed(context, '/home');
-    } else {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(const SnackBar(content: Text("Signup failed")));
+    setState(() => _isLoading = true);
+    
+    try {
+      await _authService.signup(
+        email: _emailController.text,
+        password: _passwordController.text,
+        username: _usernameController.text,
+        role: _roleController.text,
+      );
+      
+      if (mounted) {
+        Navigator.pushReplacementNamed(context, AppRoute.home);
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(e.toString())),
+        );
+      }
+    } finally {
+      if (mounted) {
+        setState(() => _isLoading = false);
+      }
     }
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text("Sign Up")),
-      body: Padding(
+      appBar: AppBar(title: const Text('Sign Up')),
+      body: SingleChildScrollView(
         padding: const EdgeInsets.all(24.0),
-        child: Column(
-          children: [
-            TextField(
-              controller: _email,
-              decoration: const InputDecoration(labelText: 'Email'),
-            ),
-            TextField(
-              controller: _password,
-              obscureText: true,
-              decoration: const InputDecoration(labelText: 'Password'),
-            ),
-            const SizedBox(height: 20),
-            ElevatedButton(
-              onPressed: _loading ? null : _signup,
-              child: Text(_loading ? "Signing up..." : "Sign Up"),
-            ),
-            TextButton(
-              onPressed: () =>
-                  Navigator.pushReplacementNamed(context, AppRoute.loginName),
-              child: const Text("Already have an account? Login"),
-            ),
-          ],
+        child: Form(
+          key: _formKey,
+          child: Column(
+            children: [
+              TextFormField(
+                controller: _emailController,
+                decoration: const InputDecoration(labelText: 'Email'),
+                keyboardType: TextInputType.emailAddress,
+                validator: (value) {
+                  if (value == null || value.isEmpty) {
+                    return 'Please enter email';
+                  }
+                  return null;
+                },
+              ),
+              TextFormField(
+                controller: _passwordController,
+                obscureText: true,
+                decoration: const InputDecoration(labelText: 'Password'),
+                validator: (value) {
+                  if (value == null || value.isEmpty) {
+                    return 'Please enter password';
+                  }
+                  return null;
+                },
+              ),
+              TextFormField(
+                controller: _usernameController,
+                decoration: const InputDecoration(labelText: 'Username'),
+                validator: (value) {
+                  if (value == null || value.isEmpty) {
+                    return 'Please enter username';
+                  }
+                  return null;
+                },
+              ),
+              TextFormField(
+                controller: _roleController,
+                decoration: const InputDecoration(labelText: 'Role'),
+                validator: (value) {
+                  if (value == null || value.isEmpty) {
+                    return 'Please enter role';
+                  }
+                  return null;
+                },
+              ),
+              const SizedBox(height: 20),
+              ElevatedButton(
+                onPressed: _isLoading ? null : _handleSignup,
+                child: Text(_isLoading ? 'Signing up...' : 'Sign Up'),
+              ),
+              TextButton(
+                onPressed: () => Navigator.pushReplacementNamed(
+                  context, 
+                  AppRoute.loginName,
+                ),
+                child: const Text('Already have an account? Login'),
+              ),
+            ],
+          ),
         ),
       ),
     );
+  }
+
+  @override
+  void dispose() {
+    _emailController.dispose();
+    _passwordController.dispose();
+    _usernameController.dispose();
+    _roleController.dispose();
+    super.dispose();
   }
 }
