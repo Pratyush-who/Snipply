@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:snipply/main/screens/ui/CategoryScreen.dart';
 import 'package:snipply/main/screens/ui/ProfileScreen.dart';
 import 'package:snipply/main/screens/ui/WishListScreen.dart';
+import 'package:snipply/main/screens/ui/homescreen.dart';
 import 'package:snipply/routes/routes.dart';
 import 'package:snipply/service/auth_services.dart';
 import 'package:google_nav_bar/google_nav_bar.dart';
@@ -19,12 +20,12 @@ class _HomePageState extends State<HomePage> {
   bool _isLoggingOut = false;
   int _selectedIndex = 0;
 
-  // Replace the _pages list with:
+  // Corrected _pages list - replace HomePage() with your actual home content
   final List<Widget> _pages = [
-    HomePage(),
-    WishlistScreen(),
-    CategoryScreen(),
-    ProfileScreen(),
+    const HomeScreen(),
+    const WishlistScreen(),
+    const CategoryScreen(),
+    const ProfileScreen(),
   ];
 
   Future<void> _handleLogout() async {
@@ -59,7 +60,7 @@ class _HomePageState extends State<HomePage> {
       body: IndexedStack(
         index: _selectedIndex,
         children: _pages,
-      ), // Display the current page
+      ),
       bottomNavigationBar: Container(
         decoration: BoxDecoration(
           color: Colors.white,

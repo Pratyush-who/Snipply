@@ -1,5 +1,6 @@
 // lib/services/auth_service.dart
 import 'dart:convert';
+import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -8,27 +9,27 @@ class AuthService {
   static const String _authTokenKey = 'auth_token';
 
   Future<void> _saveToken(String token) async {
-    try {
-      final prefs = await SharedPreferences.getInstance();
-      await prefs.setString(_authTokenKey, token);
-      print('Token saved successfully'); // Debug log
-    } catch (e) {
-      print('Error saving token: $e');
-      throw Exception('Failed to save authentication token');
-    }
+  try {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString(_authTokenKey, token);
+    print('Token saved: ${token.substring(0, 5)}...'); // Log first 5 chars
+  } catch (e) {
+    print('Error saving token: $e');
+    throw Exception('Failed to save authentication token');
   }
+}
 
-  Future<String?> getToken() async {
-    try {
-      final prefs = await SharedPreferences.getInstance();
-      final token = prefs.getString(_authTokenKey);
-      print('Retrieved token: ${token != null ? "[exists]" : "null"}'); // Debug
-      return token;
-    } catch (e) {
-      print('Error getting token: $e');
-      return null;
-    }
+Future<String?> getToken() async {
+  try {
+    final prefs = await SharedPreferences.getInstance();
+    final token = prefs.getString(_authTokenKey);
+    print('Retrieved token: ${token != null ? token.substring(0, 5) + '...' : 'null'}');
+    return token;
+  } catch (e) {
+    print('Error getting token: $e');
+    return null;
   }
+}
 
   Future<Map<String, dynamic>> login({
     required String email,
@@ -60,52 +61,62 @@ class AuthService {
     try {
       final prefs = await SharedPreferences.getInstance();
       await prefs.remove(_authTokenKey);
-      print('Token removed successfully'); // Debug log
-
-      // Optional: Add API call to invalidate token on server if needed
-      // final token = await getToken();
-      // if (token != null) {
-      //   await http.post(
-      //     Uri.parse('$_baseUrl/logout'),
-      //     headers: {'Authorization': 'Bearer $token'},
-      //   );
-      // }
+      print('Token removed successfully'); 
     } catch (e) {
       print('Logout error: $e');
       throw Exception('Failed to clear session data');
     }
   }
+Future<Map<String, dynamic>> signup({
+  required String email,
+  required String password,
+  required String username,
+  required String role,
+}) async {
+  try {
+    final url = Uri.parse('$_baseUrl/signup');
+    final response = await http.post(
+      url,
+      headers: {'Content-Type': 'application/json'},
+      body: jsonEncode({
+        'email': email.trim(),
+        'password': password.trim(),
+        'username': username.trim(),
+        'role': role.trim(),
+      }),
+    );
 
-  Future<Map<String, dynamic>> signup({
-    required String email,
-    required String password,
-    required String username,
-    required String role,
-  }) async {
+    // First try to parse as JSON
     try {
-      final url = Uri.parse('$_baseUrl/signup');
-      final response = await http.post(
-        url,
-        headers: {'Content-Type': 'application/json'},
-        body: jsonEncode({
-          'email': email.trim(),
-          'password': password.trim(),
-          'username': username.trim(),
-          'role': role.trim(),
-        }),
-      );
-
       final responseData = jsonDecode(response.body);
-
+      debugPrint('Signup JSON response: $responseData');
+      
       if (response.statusCode == 200) {
-        await _saveToken(responseData['token']);
-        return responseData;
+        if (responseData['token'] != null) {
+          await _saveToken(responseData['token']);
+          return responseData;
+        } else {
+          // If no token but successful, proceed to login
+          debugPrint('No token in response, attempting login...');
+          return await login(email: email, password: password);
+        }
       } else {
         throw Exception(responseData['message'] ?? 'Signup failed');
       }
-    } catch (e) {
-      print('Signup error: $e');
-      throw Exception('Failed to connect to server');
+    } on FormatException {
+      // Handle plain text response
+      debugPrint('Plain text response: ${response.body}');
+      if (response.statusCode == 200 && 
+          response.body.contains('User registered successfully')) {
+        // Proceed to login since signup was successful
+        return await login(email: email, password: password);
+      } else {
+        throw Exception(response.body);
+      }
     }
+  } catch (e) {
+    debugPrint('Signup error: $e');
+    throw Exception('Failed to complete signup: $e');
   }
+}
 }
